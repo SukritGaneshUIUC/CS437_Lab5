@@ -1,0 +1,66 @@
+int led = 13; // the pin the LED is connected to
+int lightVal = 0;
+
+Adafruit_GPS GPS; // variable to control GPS
+
+PulseOximeter pox; // variable to control vitals
+int pox_pin = 2;
+
+void setup() {
+    // begin serial communications
+    Serial.begin(9600); 
+
+    // pulse oximeter input
+    pinMode(pox_pin, INPUT);
+
+    // temperature sensor analog input
+    pinMode(A1, INPUT);
+
+    // air quality sensor input
+    pinMode(A3, INPUT);
+
+    // Declare the oscillating LED as an output (indicates loop is running OK, will toggle every second right after collecting data)
+    pinMode(led, OUTPUT); 
+}
+
+void loop() {
+
+    // read data
+    if (Serial.available() > 0) {
+
+        // read GPS data
+        string gpsResult = GPS.read();
+        Serial.println("GPS Result:" + gpsResult);
+
+        // read pulse oximeter data
+        if (pox.begin()) {
+            string spO2_res = pox.getSpO2();
+            string hb_res = pox.getHeartRate();
+          Serial.println("Pulse oximeter results - Oxygen percentage: " + spO2_res + "; Heart rate: " + hb_res);
+        }
+
+    } else {
+        Serial.println("No data ...");
+    }
+
+    // read temperature data
+    float temp = analogRead(A1) / 1023.0 * 5.0 * 100.0;
+    Serial.println("Temperature sensor reading (scaled): " + to_string(temp));
+
+    // read air quality
+    int airQualityAnalog = analogRead(A3);
+    Serial.println("Air quality reading (ppm): " + to_string(airQualityAnalog));
+
+    // toggle the light
+    lightVal = digitalRead(led);
+    if (lightVal == HIGH) {
+        Serial.println("Turning light off");
+        digitalWrite(led, LOW);
+    } else {
+        Serial.println("Turning light on");
+        digitalWrite(led, HIGH);
+    }
+    Serial.println("");
+    delay(1000); // wait for 1 second
+    
+}
